@@ -18,13 +18,14 @@ export class TenantInitService {
             // Crear configuración de ejemplo
             const defaultTenant = this.tenantConfigRepository.create({
                 companyCode: 'DEFAULT',
-                schemaName: 'tenant_default',
+                nameCompany: 'Compañía 1',
+                schemaName: 'cliente_1',
                 status: true,
                 host: 'localhost',
                 port: 5432,
                 username: 'postgres',
-                password: 'tu_password',
-                database: 'tu_database'
+                password: '3152108124',
+                database: 'clientes_tenant'
             });
 
             await this.tenantConfigRepository.save(defaultTenant);

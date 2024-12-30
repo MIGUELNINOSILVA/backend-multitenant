@@ -7,6 +7,9 @@ export class TenantConfig {
     companyCode: string;
 
     @Column()
+    nameCompany: string;
+
+    @Column()
     schemaName: string;
 
     @Column()

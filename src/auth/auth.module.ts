@@ -6,6 +6,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { envs } from 'src/config/envs';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { CacheService } from './cache/cache.service';
 
 @Module({
   imports:[
@@ -18,7 +19,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       },
     }),
   ],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, CacheService],
   controllers: [AuthController],
   exports: [AuthService, JwtStrategy, PassportModule]
 })

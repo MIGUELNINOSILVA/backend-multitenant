@@ -1,7 +1,8 @@
-import { Injectable, OnApplicationBootstrap, UnauthorizedException } from '@nestjs/common';
-import { Connection, createConnection, Repository } from 'typeorm';
-import { InjectConnection, InjectRepository } from '@nestjs/typeorm';
-import { TenantConfig } from './entities/tenant-config.entity';
+import { Injectable, OnApplicationBootstrap, UnauthorizedException } from "@nestjs/common";
+import { TenantConfig } from "./entities/tenant-config.entity";
+import { User } from "src/user/entities/user.entity";
+import { Connection, createConnection, Repository } from "typeorm";
+import { InjectConnection, InjectRepository } from "@nestjs/typeorm";
 
 @Injectable()
 export class TenantService implements OnApplicationBootstrap {
@@ -29,19 +30,48 @@ export class TenantService implements OnApplicationBootstrap {
         });
     }
 
+    // Método para manejar la conexión con reintentos si las credenciales son incorrectas
+    async connectToTenantWithRetry(companyCode: string, username: string, password: string, retries: number = 3): Promise<Connection> {
+        let attempt = 0;
+        let connection: Connection;
+
+        while (attempt < retries) {
+            try {
+                connection = await this.connectToTenant(companyCode, username, password);
+                return connection; // Si la conexión es exitosa, devolverla
+            } catch (error) {
+                if (error instanceof UnauthorizedException && attempt < retries - 1) {
+                    // Si el error es de autenticación y aún hay intentos, intentamos nuevamente
+                    attempt++;
+                    console.log(`Intento ${attempt} fallido. Reintentando...`);
+                } else {
+                    // Si el error no es de autenticación o se agotaron los intentos, lanzamos el error
+                    throw error;
+                }
+            }
+        }
+
+        throw new UnauthorizedException('Failed to authenticate after multiple attempts');
+    }
+
+    // Método que intenta la conexión al tenant
     async connectToTenant(companyCode: string, username: string, password: string): Promise<Connection> {
         const config = this.tenantConfigs.get(companyCode);
         if (!config) {
             throw new UnauthorizedException('Tenant not found');
         }
 
-        const connectionName = `tenant-${companyCode}`;
+        const connectionName = `tenant-${companyCode}-${username}`;
 
         // Verificar si ya existe una conexión activa
         if (this.tenantConnections.has(connectionName)) {
             const existingConnection = this.tenantConnections.get(connectionName);
             if (existingConnection.isConnected) {
+                // Si ya está conectado, devolver la conexión existente
                 return existingConnection;
+            } else {
+                // Si la conexión está presente pero no está conectada, cerrarla y crear una nueva
+                await this.closeTenantConnection(companyCode, username);
             }
         }
 
@@ -53,8 +83,8 @@ export class TenantService implements OnApplicationBootstrap {
                 host: config.host,
                 port: config.port,
                 database: config.database,
-                username: username,
-                password: password,
+                username: username, // Usar las credenciales del payload
+                password: password, // Usar las credenciales del payload
                 schema: config.schemaName,
                 entities: [__dirname + '/../**/*.entity{.ts,.js}'],
                 synchronize: true
@@ -68,6 +98,7 @@ export class TenantService implements OnApplicationBootstrap {
         }
     }
 
+    // Método para obtener la conexión activa del tenant
     async getCurrentTenantConnection(companyCode: string): Promise<Connection> {
         const connectionName = `tenant-${companyCode}`;
         const connection = this.tenantConnections.get(connectionName);
@@ -79,8 +110,8 @@ export class TenantService implements OnApplicationBootstrap {
         return connection;
     }
 
-    async closeTenantConnection(companyCode: string): Promise<void> {
-        const connectionName = `tenant-${companyCode}`;
+    async closeTenantConnection(companyCode: string, username:string): Promise<void> {
+        const connectionName = `tenant-${companyCode}-${username}`;
         const connection = this.tenantConnections.get(connectionName);
 
         if (connection && connection.isConnected) {
@@ -89,17 +120,51 @@ export class TenantService implements OnApplicationBootstrap {
         }
     }
 
-    async getTenantConnection(companyCode: string): Promise<Connection> {
+    async getTenantConnection(companyCode: string, username:string): Promise<Connection> {
         const config = this.tenantConfigs.get(companyCode);
         if (!config) {
             throw new Error(`Tenant configuration not found for company code: ${companyCode}`);
         }
-
-        // Usar la conexión inyectada
-        await this.connection.query(`SET search_path TO "${config.schemaName}"`);
-
-        return this.connection;
+    
+        const connectionName = `tenant-${companyCode}-${username}`;
+        
+        // Verificar si ya existe una conexión activa
+        if (this.tenantConnections.has(connectionName)) {
+            const existingConnection = this.tenantConnections.get(connectionName);
+            
+            if (existingConnection.isConnected) {
+                // Si ya está conectada, devolver la conexión existente
+                console.log(`Conexión existente detectada para ${connectionName}, cerrándola para crear una nueva.`);
+                // Cerrar la conexión anterior si ya está activa
+                await this.closeTenantConnection(companyCode, username);
+            }
+        }
+    
+        try {
+            // Crear nueva conexión
+            const connection = await createConnection({
+                name: connectionName,
+                type: 'postgres',
+                host: config.host,
+                port: config.port,
+                database: config.database,
+                username: config.username, // Usar las credenciales del payload
+                password: config.password, // Usar las credenciales del payload
+                schema: config.schemaName,  // El schema del tenant
+                entities: [User],  // Solo cargamos la entidad User para este tenant
+                synchronize: true,
+            });
+    
+            this.tenantConnections.set(connectionName, connection);
+            console.log(`Conexión a ${companyCode} - ${username} establecida con éxito.`);
+            return connection;
+    
+        } catch (error) {
+            console.error(`Error al conectar al tenant ${companyCode}: ${error.message}`);
+            throw new UnauthorizedException('Failed to connect to tenant database');
+        }
     }
+    
 
     async createTenantSchema(companyCode: string): Promise<void> {
         const config = this.tenantConfigs.get(companyCode);
