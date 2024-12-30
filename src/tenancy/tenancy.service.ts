@@ -1,6 +1,6 @@
 import { Injectable, OnApplicationBootstrap, UnauthorizedException } from "@nestjs/common";
 import { TenantConfig } from "./entities/tenant-config.entity";
-import { User } from "src/user/entities/user.entity";
+import { User } from "../user/entities/user.entity";
 import { Connection, createConnection, Repository } from "typeorm";
 import { InjectConnection, InjectRepository } from "@nestjs/typeorm";
 

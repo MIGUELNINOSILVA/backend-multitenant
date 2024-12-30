@@ -7,6 +7,7 @@ import { TenantMiddleware } from './middleware/tenant.middleware';
 import { TenantConfig } from './tenancy/entities/tenant-config.entity';
 import { TenantConnectionMiddleware } from './middleware/tenant-connection.middleware';
 import { UserModule } from './user/user.module';
+import { ClientModule } from './client/client.module';
 
 @Module({
   imports: [
@@ -25,7 +26,8 @@ import { UserModule } from './user/user.module';
     }),
     TenancyModule,
     AuthModule,
-    UserModule
+    UserModule,
+    ClientModule,
   ],
   exports: [TypeOrmModule] // Añade esto
 })

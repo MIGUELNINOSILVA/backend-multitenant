@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
-import { TenancyModule } from 'src/tenancy/tenancy.module';
+import { TenancyModule } from '../tenancy/tenancy.module';
 import { JwtModule } from '@nestjs/jwt';
-import { envs } from 'src/config/envs';
+import { envs } from '../config/envs';
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { CacheService } from './cache/cache.service';

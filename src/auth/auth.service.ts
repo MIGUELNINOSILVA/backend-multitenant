@@ -3,7 +3,7 @@ import { TenantService } from '../tenancy/tenancy.service';
 import { AuthCredentialsDto } from './dto/auth-credentials.dto';
 import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
-import { User } from 'src/user/entities/user.entity';
+import { User } from '../user/entities/user.entity';
 import { CacheService } from './cache/cache.service';
 
 @Injectable()
