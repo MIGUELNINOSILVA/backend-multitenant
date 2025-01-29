@@ -199,7 +199,7 @@ export class TenantService implements OnApplicationBootstrap {
                     username: config.username, // Usar las credenciales del payload
                     password: config.password, // Usar las credenciales del payload
                     schema: config.schemaName,  // El schema del tenant
-                    entities: [User],  // Solo cargamos la entidad User para este tenant
+                    entities: [__dirname + '/../**/*.entity{.ts,.js}'], // Incluye todas las entidades
                     synchronize: true,
                 });
 
