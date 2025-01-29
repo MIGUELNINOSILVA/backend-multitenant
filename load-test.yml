@@ -1,0 +1,52 @@
+config:
+  target: "http://localhost:3000"  # URL base de tu API
+  phases:
+    - duration: 30  # Duración de la prueba en segundos
+      arrivalRate: 4  # Número de solicitudes por segundo (4 en este caso)
+scenarios:
+  - name: "Login with DEFAULT company and test user"
+    flow:
+      - post:
+          url: "/api/auth/login"
+          headers:
+            Content-Type: "application/json"
+          json:
+            companyCode: "DEFAULT"
+            username: "test"
+            password: "test"
+
+  - name: "Login with DEFAULT company and test_2 user (with Authorization)"
+    flow:
+      - post:
+          url: "/api/auth/login"
+          headers:
+            Content-Type: "application/json"
+            Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsInVzZXJuYW1lIjoiYW5zb24iLCJpYXQiOjE3MzUzNTUxNjksImV4cCI6MTczNTM1NTIyOX0.NV4JqTt9BWrE1QKYPaCJ0BiWP0MXdi5Fz7yMyg0pL6o"
+          json:
+            companyCode: "DEFAULT"
+            username: "test_2"
+            password: "test"
+
+  - name: "Login with DEFAULT_2 company and test user (with Authorization)"
+    flow:
+      - post:
+          url: "/api/auth/login"
+          headers:
+            Content-Type: "application/json"
+            Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsInVzZXJuYW1lIjoiYW5zb24iLCJpYXQiOjE3MzUzNTUxNjksImV4cCI6MTczNTM1NTIyOX0.NV4JqTt9BWrE1QKYPaCJ0BiWP0MXdi5Fz7yMyg0pL6o"
+          json:
+            companyCode: "DEFAULT_2"
+            username: "test"
+            password: "test"
+
+  - name: "Login with DEFAULT_2 company and test_2 user (with Authorization)"
+    flow:
+      - post:
+          url: "/api/auth/login"
+          headers:
+            Content-Type: "application/json"
+            Authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsInVzZXJuYW1lIjoiYW5zb24iLCJpYXQiOjE3MzUzNTUxNjksImV4cCI6MTczNTM1NTIyOX0.NV4JqTt9BWrE1QKYPaCJ0BiWP0MXdi5Fz7yMyg0pL6o"
+          json:
+            companyCode: "DEFAULT_2"
+            username: "test_2"
+            password: "test"
